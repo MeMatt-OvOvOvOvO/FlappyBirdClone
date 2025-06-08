@@ -11,6 +11,7 @@ public class Pipe {
     private final double topY;
     private final double gap;
     private final double width = 52;
+    private boolean isScored = false;
 
     public static final double PIPE_SPEED = 2.0;
 
@@ -43,6 +44,14 @@ public class Pipe {
 
     public double getWidth() {
         return width;
+    }
+
+    public boolean isScored() {
+        return isScored;
+    }
+
+    public void setScored(boolean scored) {
+        isScored = scored;
     }
 
     public Rectangle2D getTopHitbox() {

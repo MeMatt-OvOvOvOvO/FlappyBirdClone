@@ -20,6 +20,7 @@ public class GameLoop extends AnimationTimer {
     private boolean gameOver = false;
     private double floatOffset = 0;
     private boolean goingUp = true;
+    private int score = 0;
 
     private final Image background;
     private final Image gameOverImage;
@@ -50,29 +51,43 @@ public class GameLoop extends AnimationTimer {
 
     @Override
     public void handle(long now) {
-        if (started && !gameOver) {
-            double delta = (now - previousSpawnTime) / 1_000_000.0;
-            previousSpawnTime = now;
-
-            bird.update();
-            updatePipes(delta);
-            checkCollisions();
-        } else if (!started) {
+        if (!started) {
             animateIdleBird();
+            render();
+            return;
         }
+
+        if (gameOver) {
+            return;
+        }
+
+        double deltaTime = (now - previousSpawnTime) / 1e9;
+        previousSpawnTime = now;
+
+        bird.update();
+        updatePipes(deltaTime);
+
+        checkCollisions();
         render();
     }
 
     private void updatePipes(double delta) {
         timeSinceLastSpawn += delta;
-        if (timeSinceLastSpawn > PIPE_SPAWN_DELAY) {
+
+        if (timeSinceLastSpawn > PIPE_SPAWN_DELAY / 1000.0) {
             spawnPipe();
             timeSinceLastSpawn = 0;
         }
 
-        for (Iterator<Pipe> iterator = pipes.iterator(); iterator.hasNext();) {
+        Iterator<Pipe> iterator = pipes.iterator();
+        while (iterator.hasNext()) {
             Pipe pipe = iterator.next();
             pipe.update(-Pipe.PIPE_SPEED);
+
+            if (!pipe.isScored() && bird.getHitbox().getMinX() > pipe.getX() + pipe.getWidth()) {
+                score++;
+                pipe.setScored(true);
+            }
 
             if (pipe.getX() + pipe.getWidth() < 0) {
                 iterator.remove();
@@ -96,19 +111,22 @@ public class GameLoop extends AnimationTimer {
     }
 
     private void render() {
-        gc.clearRect(0, 0, Game.WIDTH, Game.HEIGHT);
         renderBackground();
+        bird.render(gc);
 
         for (Pipe pipe : pipes) {
             pipe.render(gc);
         }
 
+        // TODO: temporary
+        gc.fillText("Score: " + score, 10, 20);
+
+        if (!started) {
+            gc.drawImage(new Image(getClass().getResource("/images/basics/get-ready.png").toExternalForm()), 100, 200);
+        }
+
         if (gameOver) {
-            double centerX = (Game.WIDTH - gameOverImage.getWidth()) / 2;
-            double centerY = (Game.HEIGHT - gameOverImage.getHeight()) / 2;
-            gc.drawImage(gameOverImage, centerX, centerY);
-        } else {
-            bird.render(gc);
+            gc.drawImage(gameOverImage, (Game.WIDTH - gameOverImage.getWidth()) / 2, 200);
         }
     }
 
@@ -119,20 +137,18 @@ public class GameLoop extends AnimationTimer {
 
     @Override
     public void stop() {
-        super.stop();
-        if (!gameOver) {
-            gameOver = true;
+        gameOver = true;
 
-            PauseTransition pause = new PauseTransition(Duration.seconds(2));
-            pause.setOnFinished(event -> returnToStartScreen());
-            pause.play();
-        }
+        PauseTransition pause = new PauseTransition(Duration.seconds(2));
+        pause.setOnFinished(event -> Game.goToStartScreen());
+        pause.play();
     }
 
     public void activateBird() {
         started = true;
         bird.activate();
-        bird.setOffset(0);
+        pipes.clear();
+        score = 0;
     }
 
     public boolean isStarted() {
@@ -140,7 +156,6 @@ public class GameLoop extends AnimationTimer {
     }
 
     private void returnToStartScreen() {
-        gameOver = false;
         Game.goToStartScreen();
     }
 
