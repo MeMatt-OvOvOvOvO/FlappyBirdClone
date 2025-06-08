@@ -17,10 +17,12 @@ public class Game extends Application {
     public static final int WIDTH = 400;
     public static final int HEIGHT = 600;
 
-    private Scene startScene;
+    private static Scene startScene;
+    private static Stage primaryStage;
 
     @Override
     public void start(Stage primaryStage) {
+        Game.primaryStage = primaryStage;
         primaryStage.setTitle("Flappy Bird Clone");
 
         VBox startLayout = new VBox(10);
@@ -113,6 +115,10 @@ public class Game extends Application {
 
         primaryStage.setScene(startScene);
         primaryStage.show();
+    }
+
+    public static void goToStartScreen() {
+        primaryStage.setScene(startScene);
     }
 
     public static void main(String[] args) {

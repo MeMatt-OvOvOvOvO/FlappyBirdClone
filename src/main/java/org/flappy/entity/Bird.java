@@ -1,5 +1,6 @@
 package org.flappy.entity;
 
+import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
@@ -75,5 +76,9 @@ public class Bird {
         gc.rotate(angle);
         gc.drawImage(current, -15, -15, 30, 30);
         gc.restore();
+    }
+
+    public Rectangle2D getHitbox() {
+        return new Rectangle2D(x, y, 30, 30);
     }
 }
