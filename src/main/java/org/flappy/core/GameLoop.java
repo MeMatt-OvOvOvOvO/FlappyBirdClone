@@ -8,6 +8,7 @@ import javafx.util.Duration;
 import org.flappy.app.Game;
 import org.flappy.entity.Bird;
 import org.flappy.entity.Pipe;
+import org.flappy.utils.GraphicsUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -118,15 +119,41 @@ public class GameLoop extends AnimationTimer {
             pipe.render(gc);
         }
 
-        // TODO: temporary
-        gc.fillText("Score: " + score, 10, 20);
+        if (started && !gameOver) {
+            renderScore(Game.WIDTH / 2, 20, 1.0);
+        }
 
         if (!started) {
-            gc.drawImage(new Image(getClass().getResource("/images/basics/get-ready.png").toExternalForm()), 100, 200);
+            Image getReadyImage = new Image(getClass().getResource("/images/basics/get-ready.png").toExternalForm());
+            GraphicsUtils.drawImageCentered(gc, getReadyImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT);
         }
 
         if (gameOver) {
-            gc.drawImage(gameOverImage, (Game.WIDTH - gameOverImage.getWidth()) / 2, 200);
+            Image gameOverImage = new Image(getClass().getResource("/images/basics/game-over.png").toExternalForm());
+            GraphicsUtils.drawImageCentered(gc, gameOverImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT);
+
+            double gameOverImageHeight = gameOverImage.getHeight() * 2.5;
+            double scorePosY = (Game.HEIGHT / 2) + (gameOverImageHeight / 2) + 20;
+            renderScore(Game.WIDTH / 2, scorePosY, 2.0);
+        }
+    }
+
+    private void renderScore(double posX, double posY, double scale) {
+        String scoreStr = String.valueOf(score);
+
+        double digitWidth = 24 * scale;
+        double digitHeight = 32 * scale;
+        double totalWidth = (digitWidth + (double) 5) * scoreStr.length() - (double) 5;
+
+        double startX = posX - (totalWidth / 2);
+
+        for (int i = 0; i < scoreStr.length(); i++) {
+            char digitChar = scoreStr.charAt(i);
+            String digitPath = String.format("/images/numbers/%c.png", digitChar);
+
+            Image digitImage = new Image(getClass().getResource(digitPath).toExternalForm());
+            double currentX = startX + i * (digitWidth + (double) 5);
+            gc.drawImage(digitImage, currentX, posY, digitWidth, digitHeight);
         }
     }
 
