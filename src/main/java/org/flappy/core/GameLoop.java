@@ -22,28 +22,78 @@ public class GameLoop extends AnimationTimer {
     private double floatOffset = 0;
     private boolean goingUp = true;
     private int score = 0;
+    private String difficulty;
 
-    private final Image background;
+
     private final Image gameOverImage;
     private double bgX1 = 0;
     private double bgX2;
-    private final double bgSpeed = 1;
+    private double bgSpeed = 1;
 
     private final List<Pipe> pipes = new ArrayList<>();
     private static final double PIPE_GAP = 240;
-    private static final double PIPE_SPAWN_DELAY = 2000;
+    private double pipeSpawnDelay = 2000;
     private double timeSinceLastSpawn = 0;
     private long previousSpawnTime = 0;
 
-    public GameLoop(GraphicsContext gc, String skinName) {
+    private final Image ground;
+    private double groundX1 = 0;
+    private double groundX2;
+    private final double groundSpeed = 1;
+
+    private Image backgroundDay;
+    private Image backgroundNight;
+    private Image currentBackground;
+
+    private Image pipeGreen;
+    private Image pipeRed;
+    private Image currentPipeImage;
+
+
+    public GameLoop(GraphicsContext gc, String skinName, String difficulty) {
         this.gc = gc;
         this.bird = new Bird(100, 300, skinName);
+        this.difficulty = difficulty;
 
-        this.background = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
+        switch (difficulty.toLowerCase()) {
+            case "easy" -> {
+                bgSpeed = 1;
+                Pipe.PIPE_SPEED = 1;
+                pipeSpawnDelay = 3000;
+            }
+            case "medium" -> {
+                bgSpeed = 1.5;
+                Pipe.PIPE_SPEED = 2;
+                pipeSpawnDelay = 2000;
+            }
+            case "hard" -> {
+                bgSpeed = 3;
+                Pipe.PIPE_SPEED = 4;
+                pipeSpawnDelay = 1200;
+            }
+            default -> {
+                bgSpeed = 1.5;
+                Pipe.PIPE_SPEED = 2;
+                pipeSpawnDelay = 2000;
+            }
+        }
+
+        this.backgroundDay = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
+        this.backgroundNight = new Image(getClass().getResource("/images/background/background-night.png").toExternalForm());
+        this.currentBackground = backgroundDay;
+
+        this.pipeGreen = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
+        this.pipeRed = new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm());
+        this.currentPipeImage = pipeGreen;
+
         this.gameOverImage = new Image(getClass().getResource("/images/basics/game-over.png").toExternalForm());
 
         this.bgX1 = 0;
         this.bgX2 = Game.WIDTH;
+
+        this.ground = new Image(getClass().getResource("/images/ground/ground.png").toExternalForm());
+        this.groundX2 = Game.WIDTH;
+
     }
 
     public Bird getBird() {
@@ -75,7 +125,7 @@ public class GameLoop extends AnimationTimer {
     private void updatePipes(double delta) {
         timeSinceLastSpawn += delta;
 
-        if (timeSinceLastSpawn > PIPE_SPAWN_DELAY / 1000.0) {
+        if (timeSinceLastSpawn > pipeSpawnDelay / 1000.0) {
             spawnPipe();
             timeSinceLastSpawn = 0;
         }
@@ -88,6 +138,7 @@ public class GameLoop extends AnimationTimer {
             if (!pipe.isScored() && bird.getHitbox().getMinX() > pipe.getX() + pipe.getWidth()) {
                 score++;
                 pipe.setScored(true);
+                updateVisualStyle();
             }
 
             if (pipe.getX() + pipe.getWidth() < 0) {
@@ -97,7 +148,8 @@ public class GameLoop extends AnimationTimer {
     }
 
     private void spawnPipe() {
-        pipes.add(new Pipe(Game.WIDTH, PIPE_GAP, Game.HEIGHT));
+
+        pipes.add(new Pipe(Game.WIDTH, PIPE_GAP, Game.HEIGHT, currentPipeImage));
     }
 
     private void animateIdleBird() {
@@ -118,6 +170,8 @@ public class GameLoop extends AnimationTimer {
         for (Pipe pipe : pipes) {
             pipe.render(gc);
         }
+
+        renderGround();
 
         if (started && !gameOver) {
             renderScore(Game.WIDTH / 2, 20, 1.0);
@@ -157,6 +211,16 @@ public class GameLoop extends AnimationTimer {
         }
     }
 
+    private void updateVisualStyle() {
+        if ((score / 10) % 2 == 0) {
+            currentBackground = backgroundDay;
+            currentPipeImage = pipeGreen;
+        } else {
+            currentBackground = backgroundNight;
+            currentPipeImage = pipeRed;
+        }
+    }
+
     @Override
     public void start() {
         super.start();
@@ -190,8 +254,8 @@ public class GameLoop extends AnimationTimer {
         double width = Game.WIDTH;
         double height = Game.HEIGHT;
 
-        gc.drawImage(background, bgX1, 0, width, height);
-        gc.drawImage(background, bgX2, 0, width, height);
+        gc.drawImage(currentBackground, bgX1, 0, width, height);
+        gc.drawImage(currentBackground, bgX2, 0, width, height);
 
         bgX1 -= bgSpeed;
         bgX2 -= bgSpeed;
@@ -203,8 +267,26 @@ public class GameLoop extends AnimationTimer {
         if (bgX2 + width <= 0) {
             bgX2 = bgX1 + width;
         }
+
+
     }
 
+    private void renderGround() {
+        double groundY = Game.HEIGHT - ground.getHeight();
+        gc.drawImage(ground, groundX1, groundY, Game.WIDTH, ground.getHeight());
+        gc.drawImage(ground, groundX2, groundY, Game.WIDTH, ground.getHeight());
+
+        groundX1 -= groundSpeed;
+        groundX2 -= groundSpeed;
+
+        if (groundX1 + Game.WIDTH <= 0) {
+            groundX1 = groundX2 + Game.WIDTH;
+        }
+
+        if (groundX2 + Game.WIDTH <= 0) {
+            groundX2 = groundX1 + Game.WIDTH;
+        }
+    }
     private void checkCollisions() {
         // Pipe checks
         for (Pipe pipe : pipes) {
@@ -216,8 +298,9 @@ public class GameLoop extends AnimationTimer {
         }
 
         // Border checks
-        if (bird.getHitbox().getMinY() <= 0 || bird.getHitbox().getMaxY() >= Game.HEIGHT) {
+        if (bird.getHitbox().getMinY() <= 0 || bird.getHitbox().getMaxY() >= Game.HEIGHT - ground.getHeight()) {
             stop();
         }
+
     }
 }
