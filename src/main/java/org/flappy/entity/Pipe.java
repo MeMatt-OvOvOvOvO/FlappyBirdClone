@@ -13,10 +13,11 @@ public class Pipe {
     private final double width = 52;
     private boolean isScored = false;
 
-    public static final double PIPE_SPEED = 2.0;
 
-    public Pipe(double x, double gap, double screenHeight) {
-        this.pipeImage = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
+    public static double PIPE_SPEED = 2.0;
+
+    public Pipe(double x, double gap, double screenHeight, Image pipeImage) {
+        this.pipeImage = pipeImage;
         this.x = x;
         this.gap = gap;
 
