@@ -1,6 +1,7 @@
 package org.flappy.app;
 
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -35,9 +36,15 @@ public class Game extends Application {
 
         VBox startLayout = new VBox(10);
         startLayout.setAlignment(Pos.CENTER);
-        startLayout.setPadding(new javafx.geometry.Insets(50));
+        startLayout.setTranslateY(-30);
+        startLayout.setPadding(new javafx.geometry.Insets(20));
 
-        String[] skins = {"yellow", "red", "blue"};
+        Image flappyBirdImage = new Image(getClass().getResource("/images/basics/flappy-bird.png").toExternalForm());
+        ImageView flappyBirdView = new ImageView(flappyBirdImage);
+        flappyBirdView.setFitWidth(200);
+        flappyBirdView.setPreserveRatio(true);
+
+        String[] skins = {"yellow", "red", "blue", "green", "orange", "sea", "carmine", "mint", "purple", "pink"};
         int[] skinIndex = {0};
         unlockedSkins.add("yellow");
 
@@ -90,6 +97,7 @@ public class Game extends Application {
 
         HBox skinSlider = new HBox(2, leftButton, skinPreview, rightButton);
         skinSlider.setAlignment(Pos.CENTER);
+        VBox.setMargin(skinSlider, new Insets(15, 0, 15, 0));
         updateSkinImage.run();
 
         ComboBox<String> speedSelector = new ComboBox<>();
@@ -183,9 +191,7 @@ public class Game extends Application {
 
         StackPane.setAlignment(groundView, Pos.BOTTOM_CENTER);
 
-
-
-        startLayout.getChildren().addAll(skinSlider, speedSelector, startButton, shopButton, leaderboardButton);
+        startLayout.getChildren().addAll(flappyBirdView, skinSlider, speedSelector, startButton, shopButton, leaderboardButton);
 
         StackPane startRoot = new StackPane(backgroundView, groundView, startLayout);
         startScene = new Scene(startRoot, WIDTH, HEIGHT);
@@ -228,8 +234,16 @@ public class Game extends Application {
             Label title = new Label("Buy a skin:");
             title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-            HBox skinsRow = new HBox(10);
-            skinsRow.setAlignment(Pos.CENTER);
+//            HBox skinsRow = new HBox(10);
+//            skinsRow.setAlignment(Pos.CENTER);
+
+            VBox skinsGrid = new VBox(10);
+            skinsGrid.setAlignment(Pos.CENTER);
+
+            HBox currentRow = new HBox(10);
+            currentRow.setAlignment(Pos.CENTER);
+
+            int count = 0;
 
             for (String skin : skins) {
                 if (unlockedSkins.contains(skin)) continue;
@@ -250,7 +264,18 @@ public class Game extends Application {
 
                 VBox skinBox = new VBox(skinButton);
                 skinBox.setAlignment(Pos.CENTER);
-                skinsRow.getChildren().add(skinBox);
+                currentRow.getChildren().add(skinBox);
+                count++;
+
+                if (count % 3 == 0) {
+                    skinsGrid.getChildren().add(currentRow);
+                    currentRow = new HBox(10);
+                    currentRow.setAlignment(Pos.CENTER);
+                }
+            }
+
+            if (!currentRow.getChildren().isEmpty()) {
+                skinsGrid.getChildren().add(currentRow);
             }
 
             Button backButton = new Button("Back");
@@ -266,7 +291,7 @@ public class Game extends Application {
             -fx-font-family: "Arial";""");
             backButton.setOnAction(ev -> primaryStage.setScene(startScene));
 
-            shopLayout.getChildren().addAll(title, skinsRow, backButton);
+            shopLayout.getChildren().addAll(title, skinsGrid, backButton);
             Scene shopScene = new Scene(shopLayout, WIDTH, HEIGHT);
             primaryStage.setScene(shopScene);
         });
