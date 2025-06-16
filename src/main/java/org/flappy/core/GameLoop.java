@@ -11,6 +11,7 @@ import org.flappy.database.DatabaseManager;
 import org.flappy.entities.Bird;
 import org.flappy.entities.Pipe;
 import org.flappy.graphics.GraphicsUtils;
+import org.flappy.graphics.ScoreRenderer;
 
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
@@ -22,6 +23,7 @@ import java.util.List;
 public class GameLoop extends AnimationTimer {
     private final GraphicsContext gc;
     private final Bird bird;
+    private final ScoreRenderer scoreRenderer;
     private boolean started = false;
     private boolean gameOver = false;
     private double floatOffset = 0;
@@ -61,6 +63,7 @@ public class GameLoop extends AnimationTimer {
         this.bird = new Bird(100, 300, skinName);
         this.difficulty = difficulty;
         this.gameRoot = gameRoot;
+        this.scoreRenderer = new ScoreRenderer(gc);
 
         switch (difficulty.toLowerCase()) {
             case "easy" -> {
@@ -190,7 +193,7 @@ public class GameLoop extends AnimationTimer {
         renderGround();
 
         if (started && !gameOver) {
-            renderScore(Game.WIDTH / 2, 20, 1.0);
+            scoreRenderer.renderScore(score, Game.WIDTH / 2, 20, 1.0); // Replace posX, posY, and scale with relevant values
         }
 
         if (!started) {
@@ -204,26 +207,7 @@ public class GameLoop extends AnimationTimer {
 
             double gameOverImageHeight = gameOverImage.getHeight() * 2.5;
             double scorePosY = (Game.HEIGHT / 2) + (gameOverImageHeight / 2) + 20;
-            renderScore(Game.WIDTH / 2, scorePosY, 2.0);
-        }
-    }
-
-    private void renderScore(double posX, double posY, double scale) {
-        String scoreStr = String.valueOf(score);
-
-        double digitWidth = 24 * scale;
-        double digitHeight = 32 * scale;
-        double totalWidth = (digitWidth + (double) 5) * scoreStr.length() - (double) 5;
-
-        double startX = posX - (totalWidth / 2);
-
-        for (int i = 0; i < scoreStr.length(); i++) {
-            char digitChar = scoreStr.charAt(i);
-            String digitPath = String.format("/images/numbers/%c.png", digitChar);
-
-            Image digitImage = new Image(getClass().getResource(digitPath).toExternalForm());
-            double currentX = startX + i * (digitWidth + (double) 5);
-            gc.drawImage(digitImage, currentX, posY, digitWidth, digitHeight);
+            scoreRenderer.renderScore(score,Game.WIDTH / 2, scorePosY, 2.0);
         }
     }
 
@@ -303,10 +287,6 @@ public class GameLoop extends AnimationTimer {
 
     public boolean isStarted() {
         return started;
-    }
-
-    private void returnToStartScreen() {
-        Game.goToStartScreen();
     }
 
     private void renderBackground() {
