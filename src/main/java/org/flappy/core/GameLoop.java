@@ -2,13 +2,21 @@ package org.flappy.core;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.PauseTransition;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import org.flappy.app.Game;
+import org.flappy.database.DatabaseManager;
 import org.flappy.entity.Bird;
 import org.flappy.entity.Pipe;
 import org.flappy.utils.GraphicsUtils;
+
+import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,8 +32,6 @@ public class GameLoop extends AnimationTimer {
     private int score = 0;
     private String difficulty;
 
-
-    private final Image gameOverImage;
     private double bgX1 = 0;
     private double bgX2;
     private double bgSpeed = 1;
@@ -49,11 +55,15 @@ public class GameLoop extends AnimationTimer {
     private Image pipeRed;
     private Image currentPipeImage;
 
+    private TextField nameField;
+    private Button saveButton;
+    private StackPane gameRoot;
 
-    public GameLoop(GraphicsContext gc, String skinName, String difficulty) {
+    public GameLoop(GraphicsContext gc, String skinName, String difficulty, StackPane gameRoot) {
         this.gc = gc;
         this.bird = new Bird(100, 300, skinName);
         this.difficulty = difficulty;
+        this.gameRoot = gameRoot;
 
         switch (difficulty.toLowerCase()) {
             case "easy" -> {
@@ -85,8 +95,6 @@ public class GameLoop extends AnimationTimer {
         this.pipeGreen = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
         this.pipeRed = new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm());
         this.currentPipeImage = pipeGreen;
-
-        this.gameOverImage = new Image(getClass().getResource("/images/basics/game-over.png").toExternalForm());
 
         this.bgX1 = 0;
         this.bgX2 = Game.WIDTH;
@@ -245,9 +253,48 @@ public class GameLoop extends AnimationTimer {
     public void stop() {
         gameOver = true;
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(2));
-        pause.setOnFinished(event -> Game.goToStartScreen());
-        pause.play();
+        nameField = new TextField();
+        nameField.setPromptText("Enter your name");
+
+        nameField.setMaxWidth(200);
+        nameField.setStyle("""
+            -fx-background-color: white;
+            -fx-border-color: #5d4037;
+            -fx-border-width: 2px;
+            -fx-border-radius: 6;
+            -fx-background-radius: 6;
+            -fx-padding: 5 10 5 10;
+            -fx-font-size: 14px;
+            -fx-font-family: "Arial";
+        """);
+
+        saveButton = new Button("Save Score");
+        saveButton.setStyle("""
+            -fx-background-color: linear-gradient(to bottom, #ffffff, yellow);
+            -fx-border-color: #5d4037;
+            -fx-border-width: 2px;
+            -fx-border-radius: 6;
+            -fx-background-radius: 6;
+            -fx-padding: 5 10 5 10;
+            -fx-font-size: 14px;
+            -fx-font-weight: bold;
+            -fx-font-family: "Arial";
+        """);
+
+        saveButton.setOnAction(e -> {
+            String name = nameField.getText().trim();
+            if (!name.isEmpty()) {
+                DatabaseManager.saveScore(name, score, difficulty);
+                gameRoot.getChildren().removeAll(nameField, saveButton);
+                Game.goToStartScreen();
+            }
+        });
+
+        StackPane.setAlignment(nameField, Pos.CENTER);
+        StackPane.setAlignment(saveButton, Pos.CENTER);
+        StackPane.setMargin(saveButton, new Insets(100, 0, 0, 0));
+
+        gameRoot.getChildren().addAll(nameField, saveButton);
     }
 
     public void activateBird() {
@@ -282,8 +329,6 @@ public class GameLoop extends AnimationTimer {
         if (bgX2 + width <= 0) {
             bgX2 = bgX1 + width;
         }
-
-
     }
 
     private void renderGround() {

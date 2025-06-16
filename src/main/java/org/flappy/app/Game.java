@@ -13,6 +13,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.flappy.core.GameLoop;
+import org.flappy.database.DatabaseManager;
+
+import java.util.List;
 
 public class Game extends Application {
     public static final int WIDTH = 400;
@@ -26,6 +29,7 @@ public class Game extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+//        DatabaseManager.initializeDatabase();
         Game.primaryStage = primaryStage;
         primaryStage.setTitle("Flappy Bird Clone");
 
@@ -122,16 +126,48 @@ public class Game extends Application {
 
         Button shopButton = new Button("SHOP");
         shopButton.setStyle("""
-             -fx-background-color: linear-gradient(to bottom, #ffffff, yellow);
-        -fx-border-color: #5d4037;
-        -fx-border-width: 2px;
-        -fx-border-radius: 6;
-        -fx-background-radius: 6;
-        -fx-padding: 5 10 5 10;
-        -fx-font-size: 14px;
-        -fx-font-weight: bold;
-        -fx-font-family: "Arial";
-    """);
+            -fx-background-color: linear-gradient(to bottom, #ffffff, yellow);
+            -fx-border-color: #5d4037;
+            -fx-border-width: 2px;
+            -fx-border-radius: 6;
+            -fx-background-radius: 6;
+            -fx-padding: 5 10 5 10;
+            -fx-font-size: 14px;
+            -fx-font-weight: bold;
+            -fx-font-family: "Arial";
+        """);
+
+        Button leaderboardButton = new Button("LEADERBOARD");
+        leaderboardButton.setStyle("""
+            -fx-background-color: linear-gradient(to bottom, #ffffff, yellow);
+            -fx-border-color: #5d4037;
+            -fx-border-width: 2px;
+            -fx-border-radius: 6;
+            -fx-background-radius: 6;
+            -fx-padding: 5 10 5 10;
+            -fx-font-size: 14px;
+            -fx-font-weight: bold;
+            -fx-font-family: "Arial";
+        """);
+
+
+        leaderboardButton.setOnAction(e -> {
+            List<String> topScores = DatabaseManager.getTopScores(speedSelector.getValue(), 10);
+            VBox leaderboardLayout = new VBox(10);
+            leaderboardLayout.setAlignment(Pos.CENTER);
+            leaderboardLayout.getChildren().add(new Label("Top Scores:"));
+
+            for (String entry : topScores) {
+                leaderboardLayout.getChildren().add(new Label(entry));
+            }
+
+            Button backBtn = new Button("Back");
+            backBtn.setOnAction(ev -> primaryStage.setScene(startScene));
+            leaderboardLayout.getChildren().add(backBtn);
+
+            Scene leaderboardScene = new Scene(leaderboardLayout, WIDTH, HEIGHT);
+            primaryStage.setScene(leaderboardScene);
+        });
 
 
         Image bgImage = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
@@ -149,7 +185,7 @@ public class Game extends Application {
 
 
 
-        startLayout.getChildren().addAll(skinSlider, speedSelector, startButton, shopButton);
+        startLayout.getChildren().addAll(skinSlider, speedSelector, startButton, shopButton, leaderboardButton);
 
         StackPane startRoot = new StackPane(backgroundView, groundView, startLayout);
         startScene = new Scene(startRoot, WIDTH, HEIGHT);
@@ -168,7 +204,7 @@ public class Game extends Application {
             StackPane gameRoot = new StackPane(bgView, canvas);
             Scene gameScene = new Scene(gameRoot);
 
-            GameLoop gameLoop = new GameLoop(gc, selectedSkin, speedSelector.getValue());
+            GameLoop gameLoop = new GameLoop(gc, selectedSkin, speedSelector.getValue(), gameRoot);
 
             gameScene.setOnKeyPressed(ev -> {
                 switch (ev.getCode()) {
