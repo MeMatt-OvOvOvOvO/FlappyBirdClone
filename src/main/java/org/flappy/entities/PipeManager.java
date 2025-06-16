@@ -2,6 +2,8 @@ package org.flappy.entities;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import org.flappy.config.GameConfig;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,16 +18,30 @@ public class PipeManager {
     private final double screenHeight;
     private boolean isNight = false;
 
-    private final double pipeSpawnDelay;
+    private double pipeSpawnDelay;
     private double timeSinceLastSpawn = 0;
 
-    public PipeManager(Image pipeGreen, Image pipeRed, double pipeGap, double screenWidth, double screenHeight, double pipeSpawnDelay) {
+    public PipeManager(Image pipeGreen, Image pipeRed,  double screenWidth, double screenHeight, String difficulty) {
+        switch (difficulty.toLowerCase()) {
+            case "easy" -> {
+                Pipe.PIPE_SPEED = 1;
+                this.pipeSpawnDelay = 5;
+            }
+            case "medium" -> {
+                Pipe.PIPE_SPEED = 2;
+                this.pipeSpawnDelay = 2;
+            }
+            case "hard" -> {
+                Pipe.PIPE_SPEED = 4;
+                this.pipeSpawnDelay = 1.2;
+            }
+        }
+
         this.pipeGreen = pipeGreen;
         this.pipeRed = pipeRed;
-        this.pipeGap = pipeGap;
+        this.pipeGap = GameConfig.PIPE_GAP;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
-        this.pipeSpawnDelay = pipeSpawnDelay;
     }
 
     public void update(double delta, long now) {

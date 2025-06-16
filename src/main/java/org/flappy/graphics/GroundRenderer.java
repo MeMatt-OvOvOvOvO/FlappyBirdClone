@@ -3,6 +3,7 @@ package org.flappy.graphics;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import org.flappy.app.Game;
+import org.flappy.config.GameConfig;
 
 public class GroundRenderer {
     private final GraphicsContext gc;
@@ -14,10 +15,10 @@ public class GroundRenderer {
 
     private final double groundHeightOffset;
 
-    public GroundRenderer(GraphicsContext gc, Image groundImage, double groundSpeed) {
+    public GroundRenderer(GraphicsContext gc, Image groundImage) {
         this.gc = gc;
         this.groundImage = groundImage;
-        this.groundSpeed = groundSpeed;
+        this.groundSpeed = GameConfig.GROUND_SPEED;
 
         this.groundHeightOffset = Game.HEIGHT - groundImage.getHeight();
     }

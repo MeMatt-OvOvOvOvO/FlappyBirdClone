@@ -3,6 +3,7 @@ package org.flappy.graphics;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import org.flappy.app.Game;
+import org.flappy.entities.Pipe;
 
 public class BackgroundRenderer {
     private final GraphicsContext gc;
@@ -15,12 +16,22 @@ public class BackgroundRenderer {
     private double bgX2 = Game.WIDTH;
     private double bgSpeed;
 
-    public BackgroundRenderer(GraphicsContext gc, Image backgroundDay, Image backgroundNight, boolean isNight, double bgSpeed) {
+    public BackgroundRenderer(GraphicsContext gc, Image backgroundDay, Image backgroundNight, boolean isNight, String difficulty) {
         this.gc = gc;
         this.backgroundDay = backgroundDay;
         this.backgroundNight = backgroundNight;
-        this.bgSpeed = bgSpeed;
         this.currentBackground = isNight ? backgroundNight : backgroundDay;
+
+        switch (difficulty.toLowerCase()) {
+            case "easy" -> {
+                this.bgSpeed = 1.5;
+            }
+            case "medium" -> this.bgSpeed = 1.5;
+            case "hard" -> {
+                this.bgSpeed = 3;
+            }
+        }
+
     }
 
     public void update() {

@@ -9,7 +9,6 @@ import javafx.scene.layout.StackPane;
 import org.flappy.app.Game;
 import org.flappy.database.DatabaseManager;
 import org.flappy.entities.Bird;
-import org.flappy.entities.Pipe;
 import org.flappy.entities.PipeManager;
 import org.flappy.graphics.BackgroundRenderer;
 import org.flappy.graphics.GraphicsUtils;
@@ -18,9 +17,6 @@ import org.flappy.graphics.ScoreRenderer;
 
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GameLoop extends AnimationTimer {
     private final GraphicsContext gc;
@@ -35,15 +31,7 @@ public class GameLoop extends AnimationTimer {
     private int score = 0;
     private String difficulty;
 
-    private double bgSpeed = 1;
-
-    private final List<Pipe> pipes = new ArrayList<>();
-    private static final double PIPE_GAP = 240;
-    private double pipeSpawnDelay = 2000;
     private long previousSpawnTime = 0;
-
-    private Image pipeGreen;
-    private Image pipeRed;
 
     private TextField nameField;
     private Button saveButton;
@@ -56,35 +44,14 @@ public class GameLoop extends AnimationTimer {
         this.gameRoot = gameRoot;
         this.scoreRenderer = new ScoreRenderer(gc);
 
-        switch (difficulty.toLowerCase()) {
-            case "easy" -> {
-                bgSpeed = 1.5;
-                Pipe.PIPE_SPEED = 1;
-                pipeSpawnDelay = 5;
-            }
-            case "medium" -> {
-                bgSpeed = 1.5;
-                Pipe.PIPE_SPEED = 2;
-                pipeSpawnDelay = 2;
-            }
-            case "hard" -> {
-                bgSpeed = 3;
-                Pipe.PIPE_SPEED = 4;
-                pipeSpawnDelay = 1.2;
-            }
-        }
-        this.pipeGreen = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
-        this.pipeRed = new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm());
-
-        this.backgroundRenderer = new BackgroundRenderer(gc, new Image(getClass().getResource("/images/background/background-day.png").toExternalForm()), new Image(getClass().getResource("/images/background/background-night.png").toExternalForm()), false, bgSpeed);
-        this.groundRenderer = new GroundRenderer(gc, new Image(getClass().getResource("/images/ground/ground.png").toExternalForm()), 1);
+        this.backgroundRenderer = new BackgroundRenderer(gc, new Image(getClass().getResource("/images/background/background-day.png").toExternalForm()), new Image(getClass().getResource("/images/background/background-night.png").toExternalForm()), false,  difficulty);
+        this.groundRenderer = new GroundRenderer(gc, new Image(getClass().getResource("/images/ground/ground.png").toExternalForm()));
         this.pipeManager = new PipeManager(
-                pipeGreen,
-                pipeRed,
-                PIPE_GAP,
+                new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm()),
+                new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm()),
                 Game.WIDTH,
                 Game.HEIGHT,
-                pipeSpawnDelay
+                difficulty
         );
     }
 
@@ -95,6 +62,7 @@ public class GameLoop extends AnimationTimer {
     @Override
     public void handle(long now) {
         double deltaTime = (now - previousSpawnTime) / 1e9;
+        previousSpawnTime = now;
         if (!started) {
             bird.update(deltaTime);
             backgroundRenderer.render();
@@ -106,8 +74,6 @@ public class GameLoop extends AnimationTimer {
         if (gameOver) {
             return;
         }
-
-        previousSpawnTime = now;
 
         bird.update(deltaTime);
 
