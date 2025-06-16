@@ -1,19 +1,16 @@
 package org.flappy.core;
 
 import javafx.animation.AnimationTimer;
-import javafx.animation.PauseTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
-import javafx.util.Duration;
 import org.flappy.app.Game;
 import org.flappy.database.DatabaseManager;
-import org.flappy.entity.Bird;
-import org.flappy.entity.Pipe;
-import org.flappy.utils.GraphicsUtils;
+import org.flappy.entities.Bird;
+import org.flappy.entities.Pipe;
+import org.flappy.graphics.GraphicsUtils;
 
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;

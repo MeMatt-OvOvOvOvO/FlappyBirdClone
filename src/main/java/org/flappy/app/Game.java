@@ -29,7 +29,7 @@ public class Game extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-//        DatabaseManager.initializeDatabase();
+        DatabaseManager.initializeDatabase();
         Game.primaryStage = primaryStage;
         primaryStage.setTitle("Flappy Bird Clone");
 

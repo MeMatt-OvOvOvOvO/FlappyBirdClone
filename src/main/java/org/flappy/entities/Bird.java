@@ -1,4 +1,4 @@
-package org.flappy.entity;
+package org.flappy.entities;
 
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;

@@ -1,4 +1,4 @@
-package org.flappy.utils;
+package org.flappy.graphics;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
