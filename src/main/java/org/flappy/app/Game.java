@@ -7,6 +7,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -20,6 +21,9 @@ public class Game extends Application {
     private static Scene startScene;
     private static Stage primaryStage;
 
+    private static final java.util.Set<String> unlockedSkins = new java.util.HashSet<>();
+
+
     @Override
     public void start(Stage primaryStage) {
         Game.primaryStage = primaryStage;
@@ -31,6 +35,7 @@ public class Game extends Application {
 
         String[] skins = {"yellow", "red", "blue"};
         int[] skinIndex = {0};
+        unlockedSkins.add("yellow");
 
         ImageView skinPreview = new ImageView();
         skinPreview.setFitWidth(50);
@@ -58,13 +63,26 @@ public class Game extends Application {
 
 
         leftButton.setOnAction(e -> {
-            skinIndex[0] = (skinIndex[0] - 1 + skins.length) % skins.length;
+            do {
+                skinIndex[0] = (skinIndex[0] - 1 + skins.length) % skins.length;
+            } while (!unlockedSkins.contains(skins[skinIndex[0]]));
             updateSkinImage.run();
         });
+
         rightButton.setOnAction(e -> {
-            skinIndex[0] = (skinIndex[0] + 1) % skins.length;
+            do {
+                skinIndex[0] = (skinIndex[0] + 1) % skins.length;
+            } while (!unlockedSkins.contains(skins[skinIndex[0]]));
             updateSkinImage.run();
         });
+//        leftButton.setOnAction(e -> {
+//            skinIndex[0] = (skinIndex[0] - 1 + skins.length) % skins.length;
+//            updateSkinImage.run();
+//        });
+//        rightButton.setOnAction(e -> {
+//            skinIndex[0] = (skinIndex[0] + 1) % skins.length;
+//            updateSkinImage.run();
+//        });
 
         HBox skinSlider = new HBox(2, leftButton, skinPreview, rightButton);
         skinSlider.setAlignment(Pos.CENTER);
@@ -101,6 +119,21 @@ public class Game extends Application {
 //                BackgroundPosition.DEFAULT,
 //                new BackgroundSize(WIDTH, HEIGHT, false, false, false, false)
 //        );
+
+        Button shopButton = new Button("SHOP");
+        shopButton.setStyle("""
+             -fx-background-color: linear-gradient(to bottom, #ffffff, yellow);
+        -fx-border-color: #5d4037;
+        -fx-border-width: 2px;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+        -fx-padding: 5 10 5 10;
+        -fx-font-size: 14px;
+        -fx-font-weight: bold;
+        -fx-font-family: "Arial";
+    """);
+
+
         Image bgImage = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
         ImageView backgroundView = new ImageView(bgImage);
         backgroundView.setFitWidth(WIDTH);
@@ -110,14 +143,13 @@ public class Game extends Application {
         Image groundImg = new Image(getClass().getResource("/images/ground/ground.png").toExternalForm());
         ImageView groundView = new ImageView(groundImg);
         groundView.setFitWidth(WIDTH);
-        groundView.setPreserveRatio(false); // rozciągnie na pełną szerokość
+        groundView.setPreserveRatio(false);
 
-        StackPane.setAlignment(groundView, Pos.BOTTOM_CENTER); // przypnij ziemię do dołu
+        StackPane.setAlignment(groundView, Pos.BOTTOM_CENTER);
 
 
 
-        startLayout.getChildren().addAll(skinSlider, speedSelector, startButton);
-
+        startLayout.getChildren().addAll(skinSlider, speedSelector, startButton, shopButton);
 
         StackPane startRoot = new StackPane(backgroundView, groundView, startLayout);
         startScene = new Scene(startRoot, WIDTH, HEIGHT);
@@ -153,8 +185,59 @@ public class Game extends Application {
             primaryStage.setScene(gameScene);
         });
 
+        shopButton.setOnAction(e -> {
+            VBox shopLayout = new VBox(10);
+            shopLayout.setAlignment(Pos.CENTER);
+
+            Label title = new Label("Buy a skin:");
+            title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+            HBox skinsRow = new HBox(10);
+            skinsRow.setAlignment(Pos.CENTER);
+
+            for (String skin : skins) {
+                if (unlockedSkins.contains(skin)) continue;
+
+                ImageView skinImg = new ImageView(
+                        new Image(getClass().getResource("/images/birds/" + skin + "/" + skin + "bird-midflap.png").toExternalForm())
+                );
+                skinImg.setFitWidth(60);
+                skinImg.setFitHeight(48);
+
+                Button skinButton = new Button("", skinImg);
+                skinButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                skinButton.setOnAction(ev -> {
+                    unlockedSkins.add(skin);
+                    updateSkinImage.run();
+                    primaryStage.setScene(startScene);
+                });
+
+                VBox skinBox = new VBox(skinButton);
+                skinBox.setAlignment(Pos.CENTER);
+                skinsRow.getChildren().add(skinBox);
+            }
+
+            Button backButton = new Button("Back");
+                backButton.setStyle("""
+            -fx-background-color: linear-gradient(to bottom, #ffffff, #eeeeee);
+            -fx-border-color: #5d4037;
+            -fx-border-width: 2px;
+            -fx-border-radius: 6;
+            -fx-background-radius: 6;
+            -fx-padding: 5 10 5 10;
+            -fx-font-size: 14px;
+            -fx-font-weight: bold;
+            -fx-font-family: "Arial";""");
+            backButton.setOnAction(ev -> primaryStage.setScene(startScene));
+
+            shopLayout.getChildren().addAll(title, skinsRow, backButton);
+            Scene shopScene = new Scene(shopLayout, WIDTH, HEIGHT);
+            primaryStage.setScene(shopScene);
+        });
+
         primaryStage.setScene(startScene);
         primaryStage.show();
+
     }
 
     public static void goToStartScreen() {
