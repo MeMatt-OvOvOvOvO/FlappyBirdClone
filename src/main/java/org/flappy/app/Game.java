@@ -79,14 +79,6 @@ public class Game extends Application {
             } while (!unlockedSkins.contains(skins[skinIndex[0]]));
             updateSkinImage.run();
         });
-//        leftButton.setOnAction(e -> {
-//            skinIndex[0] = (skinIndex[0] - 1 + skins.length) % skins.length;
-//            updateSkinImage.run();
-//        });
-//        rightButton.setOnAction(e -> {
-//            skinIndex[0] = (skinIndex[0] + 1) % skins.length;
-//            updateSkinImage.run();
-//        });
 
         HBox skinSlider = new HBox(2, leftButton, skinPreview, rightButton);
         skinSlider.setAlignment(Pos.CENTER);
@@ -114,15 +106,6 @@ public class Game extends Application {
 
         Button startButton = new Button("", startView);
         startButton.setStyle("-fx-background-color: transparent;");
-
-//        Image bgImage = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
-//        BackgroundImage background = new BackgroundImage(
-//                bgImage,
-//                BackgroundRepeat.NO_REPEAT,
-//                BackgroundRepeat.NO_REPEAT,
-//                BackgroundPosition.DEFAULT,
-//                new BackgroundSize(WIDTH, HEIGHT, false, false, false, false)
-//        );
 
         Button shopButton = new Button("SHOP");
         shopButton.setStyle("""

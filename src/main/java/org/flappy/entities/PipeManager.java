@@ -72,7 +72,7 @@ public class PipeManager {
     }
 
     private void spawnPipe() {
-        pipes.add(new Pipe(screenWidth, pipeGap, screenHeight, isNight ? pipeRed : pipeGreen)); // Add new pipe
+        pipes.add(new Pipe(screenWidth, pipeGap, screenHeight, isNight ? pipeRed : pipeGreen));
     }
 
     public void switchImage(boolean isNight) {

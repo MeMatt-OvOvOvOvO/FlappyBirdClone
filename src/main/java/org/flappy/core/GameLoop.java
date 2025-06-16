@@ -20,7 +20,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class GameLoop extends AnimationTimer {
@@ -33,8 +32,6 @@ public class GameLoop extends AnimationTimer {
 
     private boolean started = false;
     private boolean gameOver = false;
-    private double floatOffset = 0;
-    private boolean goingUp = true;
     private int score = 0;
     private String difficulty;
 
@@ -47,7 +44,6 @@ public class GameLoop extends AnimationTimer {
 
     private Image pipeGreen;
     private Image pipeRed;
-    private Image currentPipeImage;
 
     private TextField nameField;
     private Button saveButton;
@@ -79,7 +75,6 @@ public class GameLoop extends AnimationTimer {
         }
         this.pipeGreen = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
         this.pipeRed = new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm());
-        this.currentPipeImage = pipeGreen;
 
         this.backgroundRenderer = new BackgroundRenderer(gc, new Image(getClass().getResource("/images/background/background-day.png").toExternalForm()), new Image(getClass().getResource("/images/background/background-night.png").toExternalForm()), false, bgSpeed);
         this.groundRenderer = new GroundRenderer(gc, new Image(getClass().getResource("/images/ground/ground.png").toExternalForm()), 1);
@@ -99,9 +94,12 @@ public class GameLoop extends AnimationTimer {
 
     @Override
     public void handle(long now) {
+        double deltaTime = (now - previousSpawnTime) / 1e9;
         if (!started) {
-            animateIdleBird();
-            render();
+            bird.update(deltaTime);
+            backgroundRenderer.render();
+            groundRenderer.render();
+            bird.render(gc);
             return;
         }
 
@@ -109,10 +107,9 @@ public class GameLoop extends AnimationTimer {
             return;
         }
 
-        double deltaTime = (now - previousSpawnTime) / 1e9;
         previousSpawnTime = now;
 
-        bird.update();
+        bird.update(deltaTime);
 
         checkCollisions();
         backgroundRenderer.update();
@@ -126,17 +123,6 @@ public class GameLoop extends AnimationTimer {
         render();
     }
 
-    private void animateIdleBird() {
-        if (goingUp) {
-            floatOffset -= 0.5;
-            if (floatOffset < -10) goingUp = false;
-        } else {
-            floatOffset += 0.5;
-            if (floatOffset > 10) goingUp = true;
-        }
-        bird.setOffset(floatOffset);
-    }
-
     private void render() {
         backgroundRenderer.render();
         bird.render(gc);
@@ -146,7 +132,7 @@ public class GameLoop extends AnimationTimer {
         groundRenderer.render();
 
         if (started && !gameOver) {
-            scoreRenderer.renderScore(score, Game.WIDTH / 2, 20, 1.0); // Replace posX, posY, and scale with relevant values
+            scoreRenderer.renderScore(score, Game.WIDTH / 2, 20, 1.0);
         }
 
         if (!started) {
@@ -228,12 +214,11 @@ public class GameLoop extends AnimationTimer {
     }
 
     public void activateBird() {
-        started = true;
-        bird.activate();
-        pipeManager.reset();
-        score = 0;
+        if (bird.isIdle()) {
+            bird.jump();
+            started = true;
+        }
     }
-
     public boolean isStarted() {
         return started;
     }
