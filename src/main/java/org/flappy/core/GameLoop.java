@@ -10,6 +10,7 @@ import org.flappy.app.Game;
 import org.flappy.database.DatabaseManager;
 import org.flappy.entities.Bird;
 import org.flappy.entities.Pipe;
+import org.flappy.graphics.BackgroundRenderer;
 import org.flappy.graphics.GraphicsUtils;
 import org.flappy.graphics.ScoreRenderer;
 
@@ -24,6 +25,7 @@ public class GameLoop extends AnimationTimer {
     private final GraphicsContext gc;
     private final Bird bird;
     private final ScoreRenderer scoreRenderer;
+    private final BackgroundRenderer backgroundRenderer;
     private boolean started = false;
     private boolean gameOver = false;
     private double floatOffset = 0;
@@ -31,8 +33,6 @@ public class GameLoop extends AnimationTimer {
     private int score = 0;
     private String difficulty;
 
-    private double bgX1 = 0;
-    private double bgX2;
     private double bgSpeed = 1;
 
     private final List<Pipe> pipes = new ArrayList<>();
@@ -45,10 +45,6 @@ public class GameLoop extends AnimationTimer {
     private double groundX1 = 0;
     private double groundX2;
     private final double groundSpeed = 1;
-
-    private Image backgroundDay;
-    private Image backgroundNight;
-    private Image currentBackground;
 
     private Image pipeGreen;
     private Image pipeRed;
@@ -88,16 +84,11 @@ public class GameLoop extends AnimationTimer {
             }
         }
 
-        this.backgroundDay = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
-        this.backgroundNight = new Image(getClass().getResource("/images/background/background-night.png").toExternalForm());
-        this.currentBackground = backgroundDay;
+        this.backgroundRenderer = new BackgroundRenderer(gc, new Image(getClass().getResource("/images/background/background-day.png").toExternalForm()), new Image(getClass().getResource("/images/background/background-night.png").toExternalForm()), false, bgSpeed);
 
         this.pipeGreen = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
         this.pipeRed = new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm());
         this.currentPipeImage = pipeGreen;
-
-        this.bgX1 = 0;
-        this.bgX2 = Game.WIDTH;
 
         this.ground = new Image(getClass().getResource("/images/ground/ground.png").toExternalForm());
         this.groundX2 = Game.WIDTH;
@@ -127,6 +118,7 @@ public class GameLoop extends AnimationTimer {
         updatePipes(deltaTime);
 
         checkCollisions();
+        backgroundRenderer.update();
         render();
     }
 
@@ -183,7 +175,7 @@ public class GameLoop extends AnimationTimer {
     }
 
     private void render() {
-        renderBackground();
+        backgroundRenderer.render();
         bird.render(gc);
 
         for (Pipe pipe : pipes) {
@@ -213,10 +205,10 @@ public class GameLoop extends AnimationTimer {
 
     private void updateVisualStyle() {
         if ((score / 10) % 2 == 0) {
-            currentBackground = backgroundDay;
+            backgroundRenderer.switchBackground(false);
             currentPipeImage = pipeGreen;
         } else {
-            currentBackground = backgroundNight;
+            backgroundRenderer.switchBackground(true);
             currentPipeImage = pipeRed;
         }
 
@@ -287,25 +279,6 @@ public class GameLoop extends AnimationTimer {
 
     public boolean isStarted() {
         return started;
-    }
-
-    private void renderBackground() {
-        double width = Game.WIDTH;
-        double height = Game.HEIGHT;
-
-        gc.drawImage(currentBackground, bgX1, 0, width, height);
-        gc.drawImage(currentBackground, bgX2, 0, width, height);
-
-        bgX1 -= bgSpeed;
-        bgX2 -= bgSpeed;
-
-        if (bgX1 + width <= 0) {
-            bgX1 = bgX2 + width;
-        }
-
-        if (bgX2 + width <= 0) {
-            bgX2 = bgX1 + width;
-        }
     }
 
     private void renderGround() {
