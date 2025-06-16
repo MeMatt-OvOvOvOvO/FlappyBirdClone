@@ -9,6 +9,7 @@ import javafx.scene.layout.StackPane;
 import org.flappy.app.Game;
 import org.flappy.database.DatabaseManager;
 import org.flappy.entities.Bird;
+import org.flappy.entities.CoinManager;
 import org.flappy.entities.PipeManager;
 import org.flappy.graphics.BackgroundRenderer;
 import org.flappy.graphics.GraphicsUtils;
@@ -25,17 +26,21 @@ public class GameLoop extends AnimationTimer {
     private final BackgroundRenderer backgroundRenderer;
     private final GroundRenderer groundRenderer;
     private final PipeManager pipeManager;
+    private final CoinManager coinManager;
 
     private boolean started = false;
     private boolean gameOver = false;
     private int score = 0;
     private String difficulty;
+    private int coinsCollected = 0;
 
     private long previousSpawnTime = 0;
 
     private TextField nameField;
     private Button saveButton;
     private StackPane gameRoot;
+    private final Image gameOverImage = new Image(getClass().getResource("/images/basics/game-over.png").toExternalForm());
+    private final Image getReadyImage = new Image(getClass().getResource("/images/basics/get-ready.png").toExternalForm());
 
     public GameLoop(GraphicsContext gc, String skinName, String difficulty, StackPane gameRoot) {
         this.gc = gc;
@@ -53,6 +58,7 @@ public class GameLoop extends AnimationTimer {
                 Game.HEIGHT,
                 difficulty
         );
+        this.coinManager = new CoinManager(Game.WIDTH, Game.HEIGHT);
     }
 
     public Bird getBird() {
@@ -78,9 +84,11 @@ public class GameLoop extends AnimationTimer {
         bird.update(deltaTime);
 
         checkCollisions();
+        checkCoinCollisions();
         backgroundRenderer.update();
         groundRenderer.update();
         pipeManager.update(deltaTime, now);
+        coinManager.update(deltaTime);
         score += pipeManager.handleScoring(bird);
         if (score >= 5) {
             pipeManager.switchMoving(true);
@@ -94,25 +102,17 @@ public class GameLoop extends AnimationTimer {
         bird.render(gc);
 
         pipeManager.render(gc);
+        coinManager.render(gc);
 
         groundRenderer.render();
-
-        if (started && !gameOver) {
-            scoreRenderer.renderScore(score, Game.WIDTH / 2, 20, 1.0);
-        }
+        scoreRenderer.renderScoreboard(started && !gameOver, score, coinsCollected, gameOverImage.getHeight() * 2.5);
 
         if (!started) {
-            Image getReadyImage = new Image(getClass().getResource("/images/basics/get-ready.png").toExternalForm());
             GraphicsUtils.drawImageCentered(gc, getReadyImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT);
         }
 
         if (gameOver) {
-            Image gameOverImage = new Image(getClass().getResource("/images/basics/game-over.png").toExternalForm());
             GraphicsUtils.drawImageCentered(gc, gameOverImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT);
-
-            double gameOverImageHeight = gameOverImage.getHeight() * 2.5;
-            double scorePosY = (Game.HEIGHT / 2) + (gameOverImageHeight / 2) + 20;
-            scoreRenderer.renderScore(score,Game.WIDTH / 2, scorePosY, 2.0);
         }
     }
 
@@ -198,6 +198,12 @@ public class GameLoop extends AnimationTimer {
 
         if (bird.getHitbox().getMinY() <= 0 || bird.getHitbox().getMaxY() >= Game.HEIGHT - groundRenderer.getHeight()) {
             stop();
+        }
+    }
+
+    private void checkCoinCollisions() {
+        if (coinManager.checkCollision(bird)) {
+            coinsCollected++;
         }
     }
 }

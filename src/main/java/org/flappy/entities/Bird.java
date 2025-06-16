@@ -33,7 +33,6 @@ public class Bird {
 
     public void render(GraphicsContext gc) {
         double offsetY = idle ? animator.getFloatOffset() : 0;
-        System.out.println(velocity);
         double angle = Math.max(-30, Math.min(velocity * 3, 20));
 
         gc.save();
