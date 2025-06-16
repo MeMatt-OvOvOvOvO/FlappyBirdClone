@@ -282,7 +282,7 @@ public class GameLoop extends AnimationTimer {
         }
 
         // Border checks
-        if (bird.getHitbox().getMinY() <= 0 || bird.getHitbox().getMaxY() >= Game.HEIGHT - ground.getHeight()) {
+        if (bird.getHitbox().getMinY() <= 0 || bird.getHitbox().getMaxY() >= Game.HEIGHT - groundRenderer.getHeight()) {
             stop();
         }
 

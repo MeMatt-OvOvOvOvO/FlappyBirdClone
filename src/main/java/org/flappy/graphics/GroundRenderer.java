@@ -38,4 +38,8 @@ public class GroundRenderer {
         gc.drawImage(groundImage, groundX1, groundHeightOffset, Game.WIDTH, groundImage.getHeight());
         gc.drawImage(groundImage, groundX2, groundHeightOffset, Game.WIDTH, groundImage.getHeight());
     }
+
+    public double getHeight() {
+        return groundImage.getHeight();
+    }
 }
