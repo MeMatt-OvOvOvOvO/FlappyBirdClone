@@ -57,9 +57,9 @@ public class GameLoop extends AnimationTimer {
 
         switch (difficulty.toLowerCase()) {
             case "easy" -> {
-                bgSpeed = 1;
+                bgSpeed = 1.5;
                 Pipe.PIPE_SPEED = 1;
-                pipeSpawnDelay = 3000;
+                pipeSpawnDelay = 5000;
             }
             case "medium" -> {
                 bgSpeed = 1.5;
@@ -139,7 +139,14 @@ public class GameLoop extends AnimationTimer {
                 score++;
                 pipe.setScored(true);
                 updateVisualStyle();
+
+                if (score >= 5) {
+                    for (Pipe p : pipes) {
+                        p.setMoving(true);
+                    }
+                }
             }
+
 
             if (pipe.getX() + pipe.getWidth() < 0) {
                 iterator.remove();
@@ -149,7 +156,11 @@ public class GameLoop extends AnimationTimer {
 
     private void spawnPipe() {
 
-        pipes.add(new Pipe(Game.WIDTH, PIPE_GAP, Game.HEIGHT, currentPipeImage));
+        Pipe pipe = new Pipe(Game.WIDTH, PIPE_GAP, Game.HEIGHT, currentPipeImage);
+        if (score >= 5) {
+            pipe.setMoving(true);
+        }
+        pipes.add(pipe);
     }
 
     private void animateIdleBird() {
@@ -218,6 +229,10 @@ public class GameLoop extends AnimationTimer {
         } else {
             currentBackground = backgroundNight;
             currentPipeImage = pipeRed;
+        }
+
+        for (Pipe pipe : pipes) {
+            pipe.setPipeImage(currentPipeImage);
         }
     }
 
