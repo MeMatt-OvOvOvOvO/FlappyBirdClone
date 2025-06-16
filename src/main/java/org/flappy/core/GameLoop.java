@@ -203,10 +203,10 @@ public class GameLoop extends AnimationTimer {
 
         if (gameOver) {
             Image gameOverImage = new Image(getClass().getResource("/images/basics/game-over.png").toExternalForm());
-            GraphicsUtils.drawImageCentered(gc, gameOverImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT);
+            GraphicsUtils.drawImageCentered(gc, gameOverImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT - 100);
 
             double gameOverImageHeight = gameOverImage.getHeight() * 2.5;
-            double scorePosY = (Game.HEIGHT / 2) + (gameOverImageHeight / 2) + 20;
+            double scorePosY = (Game.HEIGHT / 2) + (gameOverImageHeight / 2) - 120;
             renderScore(Game.WIDTH / 2, scorePosY, 2.0);
         }
     }
