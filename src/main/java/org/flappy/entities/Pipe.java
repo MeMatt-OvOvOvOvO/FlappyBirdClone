@@ -17,7 +17,6 @@ public class Pipe {
     private boolean goingUp = true;
     private final double maxOffset = 80;
 
-
     public static double PIPE_SPEED = 2.0;
 
     public Pipe(double x, double gap, double screenHeight, Image pipeImage) {
@@ -68,6 +67,7 @@ public class Pipe {
     public boolean isMoving() {
         return moving;
     }
+
     public double getX() {
         return x;
     }
@@ -83,14 +83,6 @@ public class Pipe {
     public void setScored(boolean scored) {
         isScored = scored;
     }
-
-//    public Rectangle2D getTopHitbox() {
-//        return new Rectangle2D(x, topY - pipeImage.getHeight(), width, pipeImage.getHeight());
-//    }
-//
-//    public Rectangle2D getBottomHitbox() {
-//        return new Rectangle2D(x, topY + gap, width, pipeImage.getHeight());
-//    }
 
     public Rectangle2D getTopHitbox() {
         double height = pipeImage.getHeight();

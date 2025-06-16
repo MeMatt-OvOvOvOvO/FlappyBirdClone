@@ -81,4 +81,8 @@ public class Bird {
     public Rectangle2D getHitbox() {
         return new Rectangle2D(x, y, 30, 30);
     }
+
+    public double getX() {
+        return x;
+    }
 }

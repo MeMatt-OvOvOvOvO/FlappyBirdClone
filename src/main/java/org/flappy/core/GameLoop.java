@@ -10,6 +10,7 @@ import org.flappy.app.Game;
 import org.flappy.database.DatabaseManager;
 import org.flappy.entities.Bird;
 import org.flappy.entities.Pipe;
+import org.flappy.entities.PipeManager;
 import org.flappy.graphics.BackgroundRenderer;
 import org.flappy.graphics.GraphicsUtils;
 import org.flappy.graphics.GroundRenderer;
@@ -28,6 +29,8 @@ public class GameLoop extends AnimationTimer {
     private final ScoreRenderer scoreRenderer;
     private final BackgroundRenderer backgroundRenderer;
     private final GroundRenderer groundRenderer;
+    private final PipeManager pipeManager;
+
     private boolean started = false;
     private boolean gameOver = false;
     private double floatOffset = 0;
@@ -40,7 +43,6 @@ public class GameLoop extends AnimationTimer {
     private final List<Pipe> pipes = new ArrayList<>();
     private static final double PIPE_GAP = 240;
     private double pipeSpawnDelay = 2000;
-    private double timeSinceLastSpawn = 0;
     private long previousSpawnTime = 0;
 
     private Image pipeGreen;
@@ -62,26 +64,33 @@ public class GameLoop extends AnimationTimer {
             case "easy" -> {
                 bgSpeed = 1.5;
                 Pipe.PIPE_SPEED = 1;
-                pipeSpawnDelay = 5000;
+                pipeSpawnDelay = 5;
             }
             case "medium" -> {
                 bgSpeed = 1.5;
                 Pipe.PIPE_SPEED = 2;
-                pipeSpawnDelay = 2000;
+                pipeSpawnDelay = 2;
             }
             case "hard" -> {
                 bgSpeed = 3;
                 Pipe.PIPE_SPEED = 4;
-                pipeSpawnDelay = 1200;
+                pipeSpawnDelay = 1.2;
             }
         }
-
-        this.backgroundRenderer = new BackgroundRenderer(gc, new Image(getClass().getResource("/images/background/background-day.png").toExternalForm()), new Image(getClass().getResource("/images/background/background-night.png").toExternalForm()), false, bgSpeed);
-        this.groundRenderer = new GroundRenderer(gc, new Image(getClass().getResource("/images/ground/ground.png").toExternalForm()), 1);
-
         this.pipeGreen = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
         this.pipeRed = new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm());
         this.currentPipeImage = pipeGreen;
+
+        this.backgroundRenderer = new BackgroundRenderer(gc, new Image(getClass().getResource("/images/background/background-day.png").toExternalForm()), new Image(getClass().getResource("/images/background/background-night.png").toExternalForm()), false, bgSpeed);
+        this.groundRenderer = new GroundRenderer(gc, new Image(getClass().getResource("/images/ground/ground.png").toExternalForm()), 1);
+        this.pipeManager = new PipeManager(
+                pipeGreen,
+                pipeRed,
+                PIPE_GAP,
+                Game.WIDTH,
+                Game.HEIGHT,
+                pipeSpawnDelay
+        );
     }
 
     public Bird getBird() {
@@ -104,53 +113,17 @@ public class GameLoop extends AnimationTimer {
         previousSpawnTime = now;
 
         bird.update();
-        updatePipes(deltaTime);
 
         checkCollisions();
         backgroundRenderer.update();
         groundRenderer.update();
-        render();
-    }
-
-    private void updatePipes(double delta) {
-        timeSinceLastSpawn += delta;
-
-        if (timeSinceLastSpawn > pipeSpawnDelay / 1000.0) {
-            spawnPipe();
-            timeSinceLastSpawn = 0;
-        }
-
-        Iterator<Pipe> iterator = pipes.iterator();
-        while (iterator.hasNext()) {
-            Pipe pipe = iterator.next();
-            pipe.update(-Pipe.PIPE_SPEED);
-
-            if (!pipe.isScored() && bird.getHitbox().getMinX() > pipe.getX() + pipe.getWidth()) {
-                score++;
-                pipe.setScored(true);
-                updateVisualStyle();
-
-                if (score >= 5) {
-                    for (Pipe p : pipes) {
-                        p.setMoving(true);
-                    }
-                }
-            }
-
-
-            if (pipe.getX() + pipe.getWidth() < 0) {
-                iterator.remove();
-            }
-        }
-    }
-
-    private void spawnPipe() {
-
-        Pipe pipe = new Pipe(Game.WIDTH, PIPE_GAP, Game.HEIGHT, currentPipeImage);
+        pipeManager.update(deltaTime, now);
+        score += pipeManager.handleScoring(bird);
         if (score >= 5) {
-            pipe.setMoving(true);
+            pipeManager.switchMoving(true);
         }
-        pipes.add(pipe);
+        updateVisualStyle();
+        render();
     }
 
     private void animateIdleBird() {
@@ -168,9 +141,7 @@ public class GameLoop extends AnimationTimer {
         backgroundRenderer.render();
         bird.render(gc);
 
-        for (Pipe pipe : pipes) {
-            pipe.render(gc);
-        }
+        pipeManager.render(gc);
 
         groundRenderer.render();
 
@@ -196,14 +167,10 @@ public class GameLoop extends AnimationTimer {
     private void updateVisualStyle() {
         if ((score / 10) % 2 == 0) {
             backgroundRenderer.switchBackground(false);
-            currentPipeImage = pipeGreen;
+            pipeManager.switchImage(false);
         } else {
             backgroundRenderer.switchBackground(true);
-            currentPipeImage = pipeRed;
-        }
-
-        for (Pipe pipe : pipes) {
-            pipe.setPipeImage(currentPipeImage);
+            pipeManager.switchImage(true);
         }
     }
 
@@ -263,7 +230,7 @@ public class GameLoop extends AnimationTimer {
     public void activateBird() {
         started = true;
         bird.activate();
-        pipes.clear();
+        pipeManager.reset();
         score = 0;
     }
 
@@ -272,19 +239,14 @@ public class GameLoop extends AnimationTimer {
     }
 
     private void checkCollisions() {
-        // Pipe checks
-        for (Pipe pipe : pipes) {
-            if (pipe.getTopHitbox().intersects(bird.getHitbox()) ||
-                    pipe.getBottomHitbox().intersects(bird.getHitbox())) {
-                stop();
-                return;
-            }
+        if (pipeManager.checkCollision(bird)) {
+            gameOver = true;
+            stop();
+            return;
         }
 
-        // Border checks
         if (bird.getHitbox().getMinY() <= 0 || bird.getHitbox().getMaxY() >= Game.HEIGHT - groundRenderer.getHeight()) {
             stop();
         }
-
     }
 }
