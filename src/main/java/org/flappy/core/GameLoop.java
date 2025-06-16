@@ -12,6 +12,7 @@ import org.flappy.entities.Bird;
 import org.flappy.entities.Pipe;
 import org.flappy.graphics.BackgroundRenderer;
 import org.flappy.graphics.GraphicsUtils;
+import org.flappy.graphics.GroundRenderer;
 import org.flappy.graphics.ScoreRenderer;
 
 import javafx.scene.control.TextField;
@@ -26,6 +27,7 @@ public class GameLoop extends AnimationTimer {
     private final Bird bird;
     private final ScoreRenderer scoreRenderer;
     private final BackgroundRenderer backgroundRenderer;
+    private final GroundRenderer groundRenderer;
     private boolean started = false;
     private boolean gameOver = false;
     private double floatOffset = 0;
@@ -40,11 +42,6 @@ public class GameLoop extends AnimationTimer {
     private double pipeSpawnDelay = 2000;
     private double timeSinceLastSpawn = 0;
     private long previousSpawnTime = 0;
-
-    private final Image ground;
-    private double groundX1 = 0;
-    private double groundX2;
-    private final double groundSpeed = 1;
 
     private Image pipeGreen;
     private Image pipeRed;
@@ -77,22 +74,14 @@ public class GameLoop extends AnimationTimer {
                 Pipe.PIPE_SPEED = 4;
                 pipeSpawnDelay = 1200;
             }
-            default -> {
-                bgSpeed = 1.5;
-                Pipe.PIPE_SPEED = 2;
-                pipeSpawnDelay = 2000;
-            }
         }
 
         this.backgroundRenderer = new BackgroundRenderer(gc, new Image(getClass().getResource("/images/background/background-day.png").toExternalForm()), new Image(getClass().getResource("/images/background/background-night.png").toExternalForm()), false, bgSpeed);
+        this.groundRenderer = new GroundRenderer(gc, new Image(getClass().getResource("/images/ground/ground.png").toExternalForm()), 1);
 
         this.pipeGreen = new Image(getClass().getResource("/images/pipes/pipe-green.png").toExternalForm());
         this.pipeRed = new Image(getClass().getResource("/images/pipes/pipe-red.png").toExternalForm());
         this.currentPipeImage = pipeGreen;
-
-        this.ground = new Image(getClass().getResource("/images/ground/ground.png").toExternalForm());
-        this.groundX2 = Game.WIDTH;
-
     }
 
     public Bird getBird() {
@@ -119,6 +108,7 @@ public class GameLoop extends AnimationTimer {
 
         checkCollisions();
         backgroundRenderer.update();
+        groundRenderer.update();
         render();
     }
 
@@ -182,7 +172,7 @@ public class GameLoop extends AnimationTimer {
             pipe.render(gc);
         }
 
-        renderGround();
+        groundRenderer.render();
 
         if (started && !gameOver) {
             scoreRenderer.renderScore(score, Game.WIDTH / 2, 20, 1.0); // Replace posX, posY, and scale with relevant values
@@ -281,22 +271,6 @@ public class GameLoop extends AnimationTimer {
         return started;
     }
 
-    private void renderGround() {
-        double groundY = Game.HEIGHT - ground.getHeight();
-        gc.drawImage(ground, groundX1, groundY, Game.WIDTH, ground.getHeight());
-        gc.drawImage(ground, groundX2, groundY, Game.WIDTH, ground.getHeight());
-
-        groundX1 -= groundSpeed;
-        groundX2 -= groundSpeed;
-
-        if (groundX1 + Game.WIDTH <= 0) {
-            groundX1 = groundX2 + Game.WIDTH;
-        }
-
-        if (groundX2 + Game.WIDTH <= 0) {
-            groundX2 = groundX1 + Game.WIDTH;
-        }
-    }
     private void checkCollisions() {
         // Pipe checks
         for (Pipe pipe : pipes) {
