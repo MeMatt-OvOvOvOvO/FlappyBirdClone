@@ -67,7 +67,7 @@ public class ScoreRenderer {
             scale = 1.0;
         } else {
             System.out.println("not started");
-            posY = (Game.HEIGHT / 2) + (gameOverImageHeight / 2) + 20;
+            posY = (Game.HEIGHT / 2) + (gameOverImageHeight / 2) - 120;
             scale = 2.0;
         }
         renderScore(score, posX, posY, scale);

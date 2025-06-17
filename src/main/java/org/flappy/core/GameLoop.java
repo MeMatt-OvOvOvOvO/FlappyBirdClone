@@ -111,7 +111,7 @@ public class GameLoop extends AnimationTimer {
         }
 
         if (gameOver) {
-            GraphicsUtils.drawImageCentered(gc, gameOverImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT);
+            GraphicsUtils.drawImageCentered(gc, gameOverImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT - 100);
         }
     }
 
