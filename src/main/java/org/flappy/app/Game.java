@@ -30,11 +30,13 @@ public class Game extends Application {
 
     private static final Set<String> unlockedSkins = new HashSet<>();
 
-    private static int coins = 50;
+    private static int coins = 0;
 
     @Override
     public void start(Stage primaryStage) {
         DatabaseManager.initializeDatabase();
+        System.out.println(DatabaseManager.getCoins());
+        Game.coins = DatabaseManager.getCoins();
         Game.primaryStage = primaryStage;
         primaryStage.setTitle("Flappy Bird Clone");
 
@@ -50,7 +52,11 @@ public class Game extends Application {
 
         String[] skins = {"yellow", "red", "blue", "green", "orange", "sea", "carmine", "mint", "purple", "pink"};
         int[] skinIndex = {0};
-        unlockedSkins.add("yellow");
+        unlockedSkins.addAll(DatabaseManager.getUnlockedSkins());
+        if (unlockedSkins.isEmpty()) {
+            unlockedSkins.add("yellow");
+            DatabaseManager.unlockSkin("yellow");
+        }
 
         ImageView skinPreview = new ImageView();
         skinPreview.setFitWidth(50);
@@ -259,6 +265,7 @@ public class Game extends Application {
                         if (Game.getCoins() >= 5) {
                             Game.unlockedSkins.add(skin);
                             Game.addCoins(-5);
+                            DatabaseManager.unlockSkin(skin);
                             shopButton.fire();
                         }
                     });
@@ -310,6 +317,7 @@ public class Game extends Application {
 
     public static void addCoins(int value) {
         coins += value;
+        DatabaseManager.setCoins(coins);
     }
 
     public static int getCoins() {
