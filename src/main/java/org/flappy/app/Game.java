@@ -15,8 +15,11 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.flappy.core.GameLoop;
 import org.flappy.database.DatabaseManager;
+import org.flappy.graphics.ScoreRenderer;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Game extends Application {
     public static final int WIDTH = 400;
@@ -25,8 +28,9 @@ public class Game extends Application {
     private static Scene startScene;
     private static Stage primaryStage;
 
-    private static final java.util.Set<String> unlockedSkins = new java.util.HashSet<>();
+    private static final Set<String> unlockedSkins = new HashSet<>();
 
+    private static int coins = 50;
 
     @Override
     public void start(Stage primaryStage) {
@@ -37,7 +41,7 @@ public class Game extends Application {
         VBox startLayout = new VBox(10);
         startLayout.setAlignment(Pos.CENTER);
         startLayout.setTranslateY(-30);
-        startLayout.setPadding(new javafx.geometry.Insets(20));
+        startLayout.setPadding(new Insets(20));
 
         Image flappyBirdImage = new Image(getClass().getResource("/images/basics/flappy-bird.png").toExternalForm());
         ImageView flappyBirdView = new ImageView(flappyBirdImage);
@@ -217,11 +221,14 @@ public class Game extends Application {
             Label title = new Label("Buy a skin:");
             title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-//            HBox skinsRow = new HBox(10);
-//            skinsRow.setAlignment(Pos.CENTER);
-
             VBox skinsGrid = new VBox(10);
             skinsGrid.setAlignment(Pos.CENTER);
+
+            Canvas coinCanvas = new Canvas(Game.WIDTH, 50);
+            GraphicsContext gc = coinCanvas.getGraphicsContext2D();
+            ScoreRenderer scoreRenderer = new ScoreRenderer(gc);
+
+            scoreRenderer.renderCoins(Game.getCoins(), 1.0);
 
             HBox currentRow = new HBox(10);
             currentRow.setAlignment(Pos.CENTER);
@@ -229,7 +236,7 @@ public class Game extends Application {
             int count = 0;
 
             for (String skin : skins) {
-                if (unlockedSkins.contains(skin)) continue;
+                StackPane skinPane = new StackPane();
 
                 ImageView skinImg = new ImageView(
                         new Image(getClass().getResource("/images/birds/" + skin + "/" + skin + "bird-midflap.png").toExternalForm())
@@ -237,16 +244,32 @@ public class Game extends Application {
                 skinImg.setFitWidth(60);
                 skinImg.setFitHeight(48);
 
+                Region overlay = new Region();
+                overlay.setStyle("-fx-background-color: red; -fx-opacity: 0.5;");
+                overlay.setPrefSize(60, 48);
+
                 Button skinButton = new Button("", skinImg);
                 skinButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
-                skinButton.setOnAction(ev -> {
-                    unlockedSkins.add(skin);
-                    updateSkinImage.run();
-                    primaryStage.setScene(startScene);
-                });
 
-                VBox skinBox = new VBox(skinButton);
+                skinPane.getChildren().addAll(skinImg);
+                if (!Game.unlockedSkins.contains(skin)) {
+                    skinPane.getChildren().addAll(overlay);
+                    overlay.setMouseTransparent(true);
+                    skinButton.setOnAction(ev -> {
+                        if (Game.getCoins() >= 5) {
+                            Game.unlockedSkins.add(skin);
+                            Game.addCoins(-5);
+                            shopButton.fire();
+                        }
+                    });
+                }
+
+                skinPane.getChildren().add(skinButton);
+                StackPane.setAlignment(skinButton, Pos.CENTER);
+
+                VBox skinBox = new VBox(skinPane);
                 skinBox.setAlignment(Pos.CENTER);
+
                 currentRow.getChildren().add(skinBox);
                 count++;
 
@@ -262,26 +285,35 @@ public class Game extends Application {
             }
 
             Button backButton = new Button("Back");
-                backButton.setStyle("""
-            -fx-background-color: linear-gradient(to bottom, #ffffff, #eeeeee);
-            -fx-border-color: #5d4037;
-            -fx-border-width: 2px;
-            -fx-border-radius: 6;
-            -fx-background-radius: 6;
-            -fx-padding: 5 10 5 10;
-            -fx-font-size: 14px;
-            -fx-font-weight: bold;
-            -fx-font-family: "Arial";""");
+            backButton.setStyle("""
+        -fx-background-color: linear-gradient(to bottom, #ffffff, #eeeeee);
+        -fx-border-color: #5d4037;
+        -fx-border-width: 2px;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+        -fx-padding: 5 10 5 10;
+        -fx-font-size: 14px;
+        -fx-font-weight: bold;
+        -fx-font-family: "Arial";""");
             backButton.setOnAction(ev -> primaryStage.setScene(startScene));
 
-            shopLayout.getChildren().addAll(title, skinsGrid, backButton);
-            Scene shopScene = new Scene(shopLayout, WIDTH, HEIGHT);
+            shopLayout.getChildren().addAll(coinCanvas, title, skinsGrid, backButton);
+
+            Scene shopScene = new Scene(shopLayout, Game.WIDTH, Game.HEIGHT);
             primaryStage.setScene(shopScene);
         });
 
         primaryStage.setScene(startScene);
         primaryStage.show();
 
+    }
+
+    public static void addCoins(int value) {
+        coins += value;
+    }
+
+    public static int getCoins() {
+        return coins;
     }
 
     public static void goToStartScreen() {
