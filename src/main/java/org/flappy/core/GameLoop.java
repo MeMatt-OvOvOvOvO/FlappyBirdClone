@@ -166,6 +166,7 @@ public class GameLoop extends AnimationTimer {
             String name = nameField.getText().trim();
             if (!name.isEmpty()) {
                 DatabaseManager.saveScore(name, score, difficulty);
+                DatabaseManager.setCoins(Game.getCoins());
                 gameRoot.getChildren().removeAll(nameField, saveButton);
                 Game.goToStartScreen();
             }
