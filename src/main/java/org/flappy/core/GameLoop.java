@@ -32,7 +32,6 @@ public class GameLoop extends AnimationTimer {
     private boolean gameOver = false;
     private int score = 0;
     private String difficulty;
-    private int coinsCollected = 0;
 
     private long previousSpawnTime = 0;
 
@@ -105,7 +104,7 @@ public class GameLoop extends AnimationTimer {
         coinManager.render(gc);
 
         groundRenderer.render();
-        scoreRenderer.renderScoreboard(started && !gameOver, score, coinsCollected, gameOverImage.getHeight() * 2.5);
+        scoreRenderer.renderScoreboard(started && !gameOver, score, Game.getCoins(), gameOverImage.getHeight() * 2.5);
 
         if (!started) {
             GraphicsUtils.drawImageCentered(gc, getReadyImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT);
@@ -203,7 +202,7 @@ public class GameLoop extends AnimationTimer {
 
     private void checkCoinCollisions() {
         if (coinManager.checkCollision(bird)) {
-            coinsCollected++;
+            Game.addCoins(1);
         }
     }
 }
