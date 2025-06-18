@@ -25,12 +25,14 @@ public class Bird {
         if (!idle) {
             velocity += gravity;
             y += velocity;
-            animator.animate(deltaTime);
+            animator.setFlapByVelocity(velocity);
         } else {
             animator.animateIdleBird(deltaTime);
         }
     }
-
+    public void updateIdle(double deltaTime) {
+        animator.animateIdleBird(deltaTime);
+    }
     public void render(GraphicsContext gc) {
         double offsetY = idle ? animator.getFloatOffset() : 0;
         double angle = Math.max(-30, Math.min(velocity * 3, 20));

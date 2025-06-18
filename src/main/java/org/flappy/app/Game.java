@@ -154,21 +154,55 @@ public class Game extends Application {
 
         leaderboardButton.setOnAction(e -> {
             List<String> topScores = DatabaseManager.getTopScores(speedSelector.getValue(), 10);
-            VBox leaderboardLayout = new VBox(10);
+
+            VBox leaderboardLayout = new VBox(15);
             leaderboardLayout.setAlignment(Pos.CENTER);
-            leaderboardLayout.getChildren().add(new Label("Top Scores:"));
+            leaderboardLayout.setPadding(new Insets(20));
+
+            Label title = new Label("Top Scores:");
+            title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-font-family: 'Arial';");
+
+            VBox scoreBox = new VBox(5);
+            scoreBox.setAlignment(Pos.CENTER);
 
             for (String entry : topScores) {
-                leaderboardLayout.getChildren().add(new Label(entry));
+                Label scoreLabel = new Label(entry);
+                scoreLabel.setStyle("-fx-font-size: 14px; -fx-font-family: 'Arial';");
+                scoreBox.getChildren().add(scoreLabel);
             }
 
             Button backBtn = new Button("Back");
+            backBtn.setStyle("""
+        -fx-background-color: linear-gradient(to bottom, #ffffff, #eeeeee);
+        -fx-border-color: #5d4037;
+        -fx-border-width: 2px;
+        -fx-border-radius: 6;
+        -fx-background-radius: 6;
+        -fx-padding: 5 10 5 10;
+        -fx-font-size: 14px;
+        -fx-font-weight: bold;
+        -fx-font-family: "Arial";
+    """);
             backBtn.setOnAction(ev -> primaryStage.setScene(startScene));
-            leaderboardLayout.getChildren().add(backBtn);
 
-            Scene leaderboardScene = new Scene(leaderboardLayout, WIDTH, HEIGHT);
+            leaderboardLayout.getChildren().addAll(title, scoreBox, backBtn);
+
+            Image bgImageLeaderboard = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
+            ImageView bgView = new ImageView(bgImageLeaderboard);
+            bgView.setFitWidth(WIDTH);
+            bgView.setFitHeight(HEIGHT);
+
+            Image groundImgLeaderboard = new Image(getClass().getResource("/images/ground/ground.png").toExternalForm());
+            ImageView groundView = new ImageView(groundImgLeaderboard);
+            groundView.setFitWidth(WIDTH);
+            groundView.setPreserveRatio(false);
+            StackPane.setAlignment(groundView, Pos.BOTTOM_CENTER);
+
+            StackPane leaderboardRoot = new StackPane(bgView, groundView, leaderboardLayout);
+            Scene leaderboardScene = new Scene(leaderboardRoot, WIDTH, HEIGHT);
             primaryStage.setScene(leaderboardScene);
         });
+
 
 
         Image bgImage = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
@@ -224,7 +258,7 @@ public class Game extends Application {
             VBox shopLayout = new VBox(10);
             shopLayout.setAlignment(Pos.CENTER);
 
-            Label title = new Label("Buy a skin:");
+            Label title = new Label("Buy a skin for 5 coins:");
             title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
             VBox skinsGrid = new VBox(10);

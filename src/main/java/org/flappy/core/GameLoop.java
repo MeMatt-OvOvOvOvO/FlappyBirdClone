@@ -69,10 +69,12 @@ public class GameLoop extends AnimationTimer {
         double deltaTime = (now - previousSpawnTime) / 1e9;
         previousSpawnTime = now;
         if (!started) {
-            bird.update(deltaTime);
+            bird.updateIdle(deltaTime);
             backgroundRenderer.render();
             groundRenderer.render();
             bird.render(gc);
+            GraphicsUtils.drawImageCentered(gc, getReadyImage, 2.5, 2.5, 0.33, Game.WIDTH, Game.HEIGHT); // <-- Dodano
+
             return;
         }
 
