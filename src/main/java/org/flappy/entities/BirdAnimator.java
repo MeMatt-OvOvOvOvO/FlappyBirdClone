@@ -8,10 +8,12 @@ public class BirdAnimator {
     private double floatOffset = 0;
     private boolean goingUp = true;
 
-    private final double animationSpeed = 0.1;
-    private final double maxFloatOffset = 8;
+    private final double animationSpeed = 1;
+    private final double maxFloatOffset = 20;
     private final double frameDuration = 0.1;
     private double timeSinceLastFrame = 0;
+    private double timeSinceLastIdleFrame = 0;
+    private final double idleFrameDuration = 0.2;
 
     public BirdAnimator(String skinName) {
         this.flapImages = new Image[]{
@@ -54,6 +56,19 @@ public class BirdAnimator {
             }
         }
 
-        animate(deltaTime);
+        timeSinceLastIdleFrame += deltaTime;
+        if (timeSinceLastIdleFrame >= idleFrameDuration) {
+            currentFlapIndex = (currentFlapIndex + 1) % flapImages.length;
+            timeSinceLastIdleFrame = 0;
+        }
+    }
+    public void setFlapByVelocity(double velocity) {
+        if (velocity < -2) {
+            currentFlapIndex = 2;
+        } else if (velocity > 2) {
+            currentFlapIndex = 0;
+        } else {
+            currentFlapIndex = 1;
+        }
     }
 }

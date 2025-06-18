@@ -4,21 +4,16 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import org.flappy.core.GameLoop;
+import org.flappy.controller.GameController;
 import org.flappy.database.DatabaseManager;
-import org.flappy.graphics.ScoreRenderer;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class Game extends Application {
@@ -27,18 +22,26 @@ public class Game extends Application {
 
     private static Scene startScene;
     private static Stage primaryStage;
-
-    private static final Set<String> unlockedSkins = new HashSet<>();
-
     private static int coins = 0;
+    public static final Set<String> unlockedSkins = new HashSet<>();
 
     @Override
     public void start(Stage primaryStage) {
         DatabaseManager.initializeDatabase();
-        System.out.println(DatabaseManager.getCoins());
         Game.coins = DatabaseManager.getCoins();
         Game.primaryStage = primaryStage;
         primaryStage.setTitle("Flappy Bird Clone");
+
+        String[] skins = {"yellow", "red", "blue", "green", "orange", "sea", "carmine", "mint", "purple", "pink"};
+        int[] skinIndex = {0};
+
+        unlockedSkins.addAll(DatabaseManager.getUnlockedSkins());
+        if (unlockedSkins.isEmpty()) {
+            unlockedSkins.add("yellow");
+            DatabaseManager.unlockSkin("yellow");
+        }
+
+        GameController controller = new GameController(primaryStage, unlockedSkins, skins, WIDTH, HEIGHT);
 
         VBox startLayout = new VBox(10);
         startLayout.setAlignment(Pos.CENTER);
@@ -50,13 +53,6 @@ public class Game extends Application {
         flappyBirdView.setFitWidth(200);
         flappyBirdView.setPreserveRatio(true);
 
-        String[] skins = {"yellow", "red", "blue", "green", "orange", "sea", "carmine", "mint", "purple", "pink"};
-        int[] skinIndex = {0};
-        unlockedSkins.addAll(DatabaseManager.getUnlockedSkins());
-        if (unlockedSkins.isEmpty()) {
-            unlockedSkins.add("yellow");
-            DatabaseManager.unlockSkin("yellow");
-        }
 
         ImageView skinPreview = new ImageView();
         skinPreview.setFitWidth(50);
@@ -67,6 +63,7 @@ public class Game extends Application {
             Image image = new Image(getClass().getResource("/images/birds/" + skin + "/" + skin + "bird-midflap.png").toExternalForm());
             skinPreview.setImage(image);
         };
+
 
         Image leftArrowImg = new Image(getClass().getResource("/images/arrows/arrow-left.png").toExternalForm());
         ImageView leftArrowView = new ImageView(leftArrowImg);
@@ -81,7 +78,6 @@ public class Game extends Application {
         rightArrowView.setFitHeight(32);
         Button rightButton = new Button("", rightArrowView);
         rightButton.setStyle("-fx-background-color: transparent;");
-
 
         leftButton.setOnAction(e -> {
             do {
@@ -102,28 +98,31 @@ public class Game extends Application {
         VBox.setMargin(skinSlider, new Insets(15, 0, 15, 0));
         updateSkinImage.run();
 
+
         ComboBox<String> speedSelector = new ComboBox<>();
-            speedSelector.setStyle("""
-        -fx-background-color: linear-gradient(to bottom, #ffffff, #eeeeee);
-        -fx-border-color: #5d4037;
-        -fx-border-width: 2px;
-        -fx-border-radius: 6;
-        -fx-background-radius: 6;
-        -fx-padding: 5 10 5 10;
-        -fx-font-size: 14px;
-        -fx-font-weight: bold;
-        -fx-font-family: "Arial";
-""");
+        speedSelector.setStyle("""
+            -fx-background-color: linear-gradient(to bottom, #ffffff, #eeeeee);
+            -fx-border-color: #5d4037;
+            -fx-border-width: 2px;
+            -fx-border-radius: 6;
+            -fx-background-radius: 6;
+            -fx-padding: 5 10 5 10;
+            -fx-font-size: 14px;
+            -fx-font-weight: bold;
+            -fx-font-family: "Arial";
+        """);
         speedSelector.getItems().addAll("Easy", "Medium", "Hard");
         speedSelector.setValue("Medium");
+
 
         Image startImg = new Image(getClass().getResource("/images/basics/play-button.png").toExternalForm());
         ImageView startView = new ImageView(startImg);
         startView.setFitWidth(80);
         startView.setFitHeight(35);
-
         Button startButton = new Button("", startView);
         startButton.setStyle("-fx-background-color: transparent;");
+        startButton.setOnAction(e -> controller.startGame(skins[skinIndex[0]], speedSelector.getValue()));
+
 
         Button shopButton = new Button("SHOP");
         shopButton.setStyle("""
@@ -137,38 +136,13 @@ public class Game extends Application {
             -fx-font-weight: bold;
             -fx-font-family: "Arial";
         """);
+        shopButton.setOnAction(e -> controller.showShop(startScene));
 
         Button leaderboardButton = new Button("LEADERBOARD");
-        leaderboardButton.setStyle("""
-            -fx-background-color: linear-gradient(to bottom, #ffffff, yellow);
-            -fx-border-color: #5d4037;
-            -fx-border-width: 2px;
-            -fx-border-radius: 6;
-            -fx-background-radius: 6;
-            -fx-padding: 5 10 5 10;
-            -fx-font-size: 14px;
-            -fx-font-weight: bold;
-            -fx-font-family: "Arial";
-        """);
+        leaderboardButton.setStyle(shopButton.getStyle());
+        leaderboardButton.setOnAction(e -> controller.showLeaderboard(speedSelector.getValue(), startScene));
 
-
-        leaderboardButton.setOnAction(e -> {
-            List<String> topScores = DatabaseManager.getTopScores(speedSelector.getValue(), 10);
-            VBox leaderboardLayout = new VBox(10);
-            leaderboardLayout.setAlignment(Pos.CENTER);
-            leaderboardLayout.getChildren().add(new Label("Top Scores:"));
-
-            for (String entry : topScores) {
-                leaderboardLayout.getChildren().add(new Label(entry));
-            }
-
-            Button backBtn = new Button("Back");
-            backBtn.setOnAction(ev -> primaryStage.setScene(startScene));
-            leaderboardLayout.getChildren().add(backBtn);
-
-            Scene leaderboardScene = new Scene(leaderboardLayout, WIDTH, HEIGHT);
-            primaryStage.setScene(leaderboardScene);
-        });
+        startLayout.getChildren().addAll(flappyBirdView, skinSlider, speedSelector, startButton, shopButton, leaderboardButton);
 
 
         Image bgImage = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
@@ -176,143 +150,17 @@ public class Game extends Application {
         backgroundView.setFitWidth(WIDTH);
         backgroundView.setFitHeight(HEIGHT);
 
-
         Image groundImg = new Image(getClass().getResource("/images/ground/ground.png").toExternalForm());
         ImageView groundView = new ImageView(groundImg);
         groundView.setFitWidth(WIDTH);
         groundView.setPreserveRatio(false);
-
         StackPane.setAlignment(groundView, Pos.BOTTOM_CENTER);
-
-        startLayout.getChildren().addAll(flappyBirdView, skinSlider, speedSelector, startButton, shopButton, leaderboardButton);
 
         StackPane startRoot = new StackPane(backgroundView, groundView, startLayout);
         startScene = new Scene(startRoot, WIDTH, HEIGHT);
 
-        startButton.setOnAction(e -> {
-            String selectedSkin = skins[skinIndex[0]];
-
-            Canvas canvas = new Canvas(WIDTH, HEIGHT);
-            GraphicsContext gc = canvas.getGraphicsContext2D();
-
-            Image bgImageGame = new Image(getClass().getResource("/images/background/background-day.png").toExternalForm());
-            ImageView bgView = new ImageView(bgImageGame);
-            bgView.setFitWidth(WIDTH);
-            bgView.setFitHeight(HEIGHT);
-
-            StackPane gameRoot = new StackPane(bgView, canvas);
-            Scene gameScene = new Scene(gameRoot);
-
-            GameLoop gameLoop = new GameLoop(gc, selectedSkin, speedSelector.getValue(), gameRoot);
-
-            gameScene.setOnKeyPressed(ev -> {
-                switch (ev.getCode()) {
-                    case SPACE -> {
-                        if (!gameLoop.isStarted()) {
-                            gameLoop.activateBird();
-                        }
-                        gameLoop.getBird().jump();
-                    }
-                }
-            });
-
-            gameLoop.start();
-            primaryStage.setScene(gameScene);
-        });
-
-        shopButton.setOnAction(e -> {
-            VBox shopLayout = new VBox(10);
-            shopLayout.setAlignment(Pos.CENTER);
-
-            Label title = new Label("Buy a skin:");
-            title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
-            VBox skinsGrid = new VBox(10);
-            skinsGrid.setAlignment(Pos.CENTER);
-
-            Canvas coinCanvas = new Canvas(Game.WIDTH, 50);
-            GraphicsContext gc = coinCanvas.getGraphicsContext2D();
-            ScoreRenderer scoreRenderer = new ScoreRenderer(gc);
-
-            scoreRenderer.renderCoins(Game.getCoins(), 1.0);
-
-            HBox currentRow = new HBox(10);
-            currentRow.setAlignment(Pos.CENTER);
-
-            int count = 0;
-
-            for (String skin : skins) {
-                StackPane skinPane = new StackPane();
-
-                ImageView skinImg = new ImageView(
-                        new Image(getClass().getResource("/images/birds/" + skin + "/" + skin + "bird-midflap.png").toExternalForm())
-                );
-                skinImg.setFitWidth(60);
-                skinImg.setFitHeight(48);
-
-                Region overlay = new Region();
-                overlay.setStyle("-fx-background-color: red; -fx-opacity: 0.5;");
-                overlay.setPrefSize(60, 48);
-
-                Button skinButton = new Button("", skinImg);
-                skinButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
-
-                skinPane.getChildren().addAll(skinImg);
-                if (!Game.unlockedSkins.contains(skin)) {
-                    skinPane.getChildren().addAll(overlay);
-                    overlay.setMouseTransparent(true);
-                    skinButton.setOnAction(ev -> {
-                        if (Game.getCoins() >= 5) {
-                            Game.unlockedSkins.add(skin);
-                            Game.addCoins(-5);
-                            DatabaseManager.unlockSkin(skin);
-                            shopButton.fire();
-                        }
-                    });
-                }
-
-                skinPane.getChildren().add(skinButton);
-                StackPane.setAlignment(skinButton, Pos.CENTER);
-
-                VBox skinBox = new VBox(skinPane);
-                skinBox.setAlignment(Pos.CENTER);
-
-                currentRow.getChildren().add(skinBox);
-                count++;
-
-                if (count % 3 == 0) {
-                    skinsGrid.getChildren().add(currentRow);
-                    currentRow = new HBox(10);
-                    currentRow.setAlignment(Pos.CENTER);
-                }
-            }
-
-            if (!currentRow.getChildren().isEmpty()) {
-                skinsGrid.getChildren().add(currentRow);
-            }
-
-            Button backButton = new Button("Back");
-            backButton.setStyle("""
-        -fx-background-color: linear-gradient(to bottom, #ffffff, #eeeeee);
-        -fx-border-color: #5d4037;
-        -fx-border-width: 2px;
-        -fx-border-radius: 6;
-        -fx-background-radius: 6;
-        -fx-padding: 5 10 5 10;
-        -fx-font-size: 14px;
-        -fx-font-weight: bold;
-        -fx-font-family: "Arial";""");
-            backButton.setOnAction(ev -> primaryStage.setScene(startScene));
-
-            shopLayout.getChildren().addAll(coinCanvas, title, skinsGrid, backButton);
-
-            Scene shopScene = new Scene(shopLayout, Game.WIDTH, Game.HEIGHT);
-            primaryStage.setScene(shopScene);
-        });
-
         primaryStage.setScene(startScene);
         primaryStage.show();
-
     }
 
     public static void addCoins(int value) {
